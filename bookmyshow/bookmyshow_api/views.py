@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LoginSerializer, RegisterSerializer
+from rest_framework.permissions import IsAuthenticated
 import logging
 
 logger = logging.getLogger("bookmyshow_api")
@@ -43,3 +44,22 @@ class RegisterView(APIView):
         else:
             logger.warning(f"Registration attempt failed with data: {request.data}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh_token")
+            if not refresh_token:
+                logger.warning("Logout attempt failed: No refresh token provided.")
+                return Response({"error": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            logger.info(f"User {request.user.email} logged out successfully.")
+            return Response({"message": "Logout successful."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Unexpected error occurred during logout: {str(e)}")
+            return Response({"error": "An unexpected error occurred. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
