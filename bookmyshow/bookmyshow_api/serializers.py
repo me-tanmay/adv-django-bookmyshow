@@ -42,3 +42,34 @@ class LoginSerializer(serializers.Serializer):
         logger.info(f"User {email} authenticated successfully.")
         data['user'] = user
         return data
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+    name = serializers.CharField(required=True)
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('email', 'name', 'username', 'password')
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            logger.warning(f"Registration attempt failed: Email {value} already exists.")
+            raise serializers.ValidationError("Email already exists.")
+        return value
+
+    def create(self, validated_data):
+        try:
+            user = User.objects.create_user(
+                username=validated_data['username'],
+                email=validated_data['email'],
+                password=validated_data['password'],
+                first_name=validated_data['name']
+            )
+            logger.info(f"User {user.email} registered successfully.")
+            return user
+        except Exception as e:
+            logger.error(f"Unexpected error occurred during user creation: {str(e)}")
+            raise serializers.ValidationError("An unexpected error occurred. Please try again later.")
