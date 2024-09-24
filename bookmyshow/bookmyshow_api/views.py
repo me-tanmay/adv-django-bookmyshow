@@ -70,7 +70,19 @@ class EventView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        location = request.query_params.get('location')
+        date = request.query_params.get('date')
+        category = request.query_params.get('category')
+
         events = Event.objects.all()
+
+        if location:
+            events = events.filter(location__icontains=location)
+        if date:
+            events = events.filter(date__date=date)
+        if category:
+            events = events.filter(category=category)
+
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
