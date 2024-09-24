@@ -12,14 +12,16 @@ class UserTests(APITestCase):
     def setUp(self):
         self.user_data = {
             'email': 'testuser@example.com',
-            'name': 'Test User',
+            'first_name': 'Test',
+            'last_name': 'User',
             'username': 'testuser',
             'password': 'testpassword',
             'role': 'user'
         }
         self.event_manager_data = {
             'email': 'eventmanager@example.com',
-            'name': 'Event Manager',
+            'first_name': 'Event',
+            'last_name': 'Manager',
             'username': 'eventmanager',
             'password': 'testpassword',
             'role': 'event_manager'
@@ -50,6 +52,7 @@ class UserTests(APITestCase):
             'password': 'testpassword'
         }, format='json')
         refresh_token = login_response.data['refresh_token']
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + login_response.data['access_token'])
         url = reverse('logout')
         response = self.client.post(url, {'refresh_token': refresh_token}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -59,14 +62,16 @@ class EventTests(APITestCase):
     def setUp(self):
         self.event_manager = CustomUser.objects.create_user(
             email='eventmanager@example.com',
-            name='Event Manager',
+            first_name='Event',
+            last_name='Manager',
             username='eventmanager',
             password='testpassword',
             role='event_manager'
         )
         self.user = CustomUser.objects.create_user(
             email='testuser@example.com',
-            name='Test User',
+            first_name='Test',
+            last_name='User',
             username='testuser',
             password='testpassword',
             role='user'
@@ -83,6 +88,8 @@ class EventTests(APITestCase):
     def test_create_event(self):
         url = reverse('events')
         response = self.client.post(url, self.event_data, format='json')
+        if response.status_code == status.HTTP_400_BAD_REQUEST:
+            print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(Event.objects.get().name, 'Test Event')
@@ -106,14 +113,16 @@ class BookingTests(APITestCase):
     def setUp(self):
         self.event_manager = CustomUser.objects.create_user(
             email='eventmanager@example.com',
-            name='Event Manager',
+            first_name='Event',
+            last_name='Manager',
             username='eventmanager',
             password='testpassword',
             role='event_manager'
         )
         self.user = CustomUser.objects.create_user(
             email='testuser@example.com',
-            name='Test User',
+            first_name='Test',
+            last_name='User',
             username='testuser',
             password='testpassword',
             role='user'
@@ -128,13 +137,16 @@ class BookingTests(APITestCase):
         )
         self.booking_data = {
             'event': self.event.id,
-            'number_of_tickets': 2
+            'number_of_tickets': 2,
+            'user': self.user.id
         }
         self.client.force_authenticate(user=self.user)
 
     def test_create_booking(self):
         url = reverse('bookings')
         response = self.client.post(url, self.booking_data, format='json')
+        if response.status_code == status.HTTP_400_BAD_REQUEST:
+            print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Booking.objects.count(), 1)
         self.assertEqual(Booking.objects.get().event.name, 'Test Event')
@@ -144,14 +156,16 @@ class PaymentTests(APITestCase):
     def setUp(self):
         self.event_manager = CustomUser.objects.create_user(
             email='eventmanager@example.com',
-            name='Event Manager',
+            first_name='Event',
+            last_name='Manager',
             username='eventmanager',
             password='testpassword',
             role='event_manager'
         )
         self.user = CustomUser.objects.create_user(
             email='testuser@example.com',
-            name='Test User',
+            first_name='Test',
+            last_name='User',
             username='testuser',
             password='testpassword',
             role='user'
@@ -182,3 +196,5 @@ class PaymentTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Payment.objects.count(), 1)
         self.assertEqual(Payment.objects.get().booking.event.name, 'Test Event')
+
+        

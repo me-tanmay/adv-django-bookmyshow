@@ -8,14 +8,15 @@ logger = logging.getLogger("bookmyshow_api")
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
-    name = serializers.CharField(required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
     username = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True, required=True)
     role = serializers.ChoiceField(choices=CustomUser.USER_ROLES, required=True)
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'name', 'username', 'password', 'role')
+        fields = ('email', 'first_name', 'last_name', 'username', 'password', 'role')
 
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
@@ -29,7 +30,8 @@ class RegisterSerializer(serializers.ModelSerializer):
                 username=validated_data['username'],
                 email=validated_data['email'],
                 password=validated_data['password'],
-                first_name=validated_data['name'],
+                first_name=validated_data['first_name'],
+                last_name=validated_data['last_name'],
                 role=validated_data['role']
             )
             logger.info(f"User {user.email} registered successfully.")
@@ -78,16 +80,19 @@ class LoginSerializer(serializers.Serializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    created_by = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
+
     class Meta:
         model = Event
         fields = '__all__'
 
-
 class BookingSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
+
     class Meta:
         model = Booking
         fields = '__all__'
-        
+
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:

@@ -15,10 +15,18 @@ class CustomUser(AbstractUser):
     
 
 class Event(models.Model):
+    CATEGORY_CHOICES = (
+        ('music', 'Music'),
+        ('sports', 'Sports'),
+        ('theatre', 'Theatre'),
+        ('comedy', 'Comedy'),
+        ('education', 'Education'),
+    )
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateTimeField()
     location = models.CharField(max_length=255)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='music')
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='events')
 
     def __str__(self):

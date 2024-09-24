@@ -19,7 +19,7 @@ from django.urls import path, include
 from bookmyshow_api import urls as bookmyshow_urls
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('bookmyshow/', include(bookmyshow_urls))
 ]

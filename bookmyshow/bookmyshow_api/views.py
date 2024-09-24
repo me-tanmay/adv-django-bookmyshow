@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LoginSerializer, RegisterSerializer, EventSerializer, BookingSerializer, PaymentSerializer
 from .models import Event, Booking, Payment
+from .utils import send_event_update_email
 from rest_framework.permissions import IsAuthenticated
 import logging
 
@@ -99,6 +100,28 @@ class EventView(APIView):
         else:
             logger.warning(f"Event creation attempt failed with data: {request.data}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk):
+        try:
+            event = Event.objects.get(pk=pk)
+            serializer = EventSerializer(event, data=request.data, partial=True)
+            if serializer.is_valid():
+                event = serializer.save()
+                logger.info(f"Event {event.name} updated successfully by {request.user.email}.")
+                # Send event update email to all users who have booked this event
+                bookings = Booking.objects.filter(event=event)
+                for booking in bookings:
+                    send_event_update_email(event, booking.user)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                logger.warning(f"Event update attempt failed with data: {request.data}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Event.DoesNotExist:
+            logger.error(f"Event with id {pk} does not exist.")
+            return Response({'error': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Unexpected error occurred during event update: {str(e)}")
+            return Response({'error': 'An unexpected error occurred. Please try again later.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
 class BookingView(APIView):
