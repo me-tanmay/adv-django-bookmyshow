@@ -11,22 +11,6 @@ import logging
 
 logger = logging.getLogger("bookmyshow_api")
 
-class LoginView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            refresh = RefreshToken.for_user(user)
-            logger.info(f"User {user.email} logged in successfully.")
-            return Response({
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-            }, status=status.HTTP_200_OK)
-        else:
-            logger.warning(f"Login attempt failed with data: {request.data}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -43,6 +27,22 @@ class RegisterView(APIView):
                 return Response({'error': 'An unexpected error occurred. Please try again later.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             logger.warning(f"Registration attempt failed with data: {request.data}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            refresh = RefreshToken.for_user(user)
+            logger.info(f"User {user.email} logged in successfully.")
+            return Response({
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+            }, status=status.HTTP_200_OK)
+        else:
+            logger.warning(f"Login attempt failed with data: {request.data}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
