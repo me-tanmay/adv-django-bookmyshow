@@ -2,7 +2,7 @@ import logging
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 
-from.models import CustomUser
+from.models import CustomUser, Event, Booking, Payment
 
 logger = logging.getLogger("bookmyshow_api")
 
@@ -75,3 +75,21 @@ class LoginSerializer(serializers.Serializer):
         logger.info(f"User {email} authenticated successfully.")
         data['user'] = user
         return data
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = '__all__'
+        
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'
